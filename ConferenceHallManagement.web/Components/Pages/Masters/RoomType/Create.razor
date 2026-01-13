@@ -1,0 +1,151 @@
+﻿@page "/masters/room-type/create"
+@page "/room-type/create"
+@rendermode InteractiveServer
+
+@inject IMasterRoomTypeBlazorService Service
+@inject NavigationManager Nav
+@inject ILogger<Create> Logger
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Create New Room Type
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    <EditForm Model="@model" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <!-- Room Type English -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Room Type (English) <span class="text-danger">*</span>
+                            </label>
+                            <InputText class="form-control"
+                                       @bind-Value="model.RoomTypeEn"
+                                       placeholder="e.g. Conference Room"
+                                       disabled="@isSaving" />
+                            <ValidationMessage For="@(() => model.RoomTypeEn)" class="text-danger" />
+                        </div>
+
+                        <!-- Room Type Hindi -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Room Type (Hindi)
+                            </label>
+                            <InputText class="form-control"
+                                       @bind-Value="model.RoomTypeHi"
+                                       placeholder="e.g. सम्मेलन कक्ष"
+                                       disabled="@isSaving" />
+                            <ValidationMessage For="@(() => model.RoomTypeHi)" class="text-danger" />
+                        </div>
+
+                        <!-- Is Active -->
+                        <div class="mb-3 form-check">
+                            <InputCheckbox class="form-check-input"
+                                           @bind-Value="model.IsActive"
+                                           disabled="@isSaving" />
+                            <label class="form-check-label">
+                                Is Active
+                            </label>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button"
+                                    class="btn btn-secondary"
+                                    @onclick="HandleCancel"
+                                    disabled="@isSaving">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-primary"
+                                    disabled="@isSaving">
+                                @if (isSaving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-save"></i>
+                                    <span>Save</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private MasterRoomTypeVM model = new()
+    {
+        IsActive = true
+    };
+
+    private bool isSaving = false;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSaving = true;
+            StateHasChanged();
+
+            Logger.LogInformation($"Creating new room type: {model.RoomTypeEn}");
+
+            var result = await Service.CreateAsync(model);
+
+            if (result > 0)
+            {
+                await JS.InvokeVoidAsync(
+                    "toastrSuccess",
+                    $"Room Type '{model.RoomTypeEn}' created successfully!",
+                    "Success");
+
+                Logger.LogInformation("Room Type created successfully");
+
+                await Task.Delay(800);
+
+                Nav.NavigateTo("/room-type", forceLoad: true);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync(
+                    "toastrWarning",
+                    "Failed to create Room Type. Please try again.",
+                    "Warning");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating room type");
+
+            await JS.InvokeVoidAsync(
+                "toastrError",
+                ex.Message,
+                "Error");
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleCancel()
+    {
+        Nav.NavigateTo("/room-type", forceLoad: true);
+    }
+}

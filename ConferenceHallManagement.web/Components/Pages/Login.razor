@@ -1,0 +1,245 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using ConferenceHallManagement.Web.Services
+@inject AuthState Auth
+@inject NavigationManager Navigation
+
+<PageTitle>Login - Conference Hall Management</PageTitle>
+
+<link rel="stylesheet" href="css/login.css" />
+
+<div class="login-container">
+    <!-- Header with Logo and Title -->
+    <div class="login-header-section">
+        <div class="logo-section">
+            <div class="logo">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="45" fill="#0088cc" opacity="0.2"/>
+                    <path d="M 30 50 L 50 30 L 70 50 L 70 70 L 30 70 Z" fill="#0088cc"/>
+                    <rect x="45" y="45" width="10" height="10" fill="#ffffff"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>POWERGRID</h1>
+                <p>Power Grid Corporation of India Limited</p>
+            </div>
+        </div>
+        <div class="page-title">
+            <h2>CONFERENCE HALL BOOKING</h2>
+            <h3>MANAGEMENT</h3>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="login-navbar">
+        <div class="nav-left">
+            <span class="nav-brand">POWERGRID</span>
+            <span class="nav-home">🏠</span>
+            <a href="#" class="nav-link">Book Conference Hall</a>
+            <a href="#" class="nav-link">My Bookings</a>
+        </div>
+        <div class="nav-right">
+            <span class="nav-welcome">Welcome, Guest</span>
+        </div>
+    </nav>
+
+    <!-- Main Login Content -->
+    <div class="login-main">
+        <!-- Tab Navigation -->
+        <div class="login-tabs">
+            <button class="tab-button @(isAdminLogin ? "" : "active")" @onclick="() => SwitchTab(false)">
+                👤 User Login
+            </button>
+            <button class="tab-button @(isAdminLogin ? "active" : "")" @onclick="() => SwitchTab(true)">
+                🔐 Admin Login
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <div class="login-form-section">
+            <div class="form-title">
+                <h3>@(isAdminLogin ? "Admin Login" : "User Login")</h3>
+                <div class="form-divider"></div>
+            </div>
+
+            <EditForm Model="loginModel"
+                      OnValidSubmit="HandleLogin"
+                      FormName="LoginForm"
+                      class="login-form">
+
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger">
+                        <span class="alert-icon">⚠️</span>
+                        <span>@errorMessage</span>
+                        <button type="button" class="alert-close" @onclick="ClearError">×</button>
+                    </div>
+                }
+
+                <!-- Username Field -->
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <span class="label-icon">👤</span>
+                        <span>@(isAdminLogin ? "Admin ID" : "User Name")</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <InputText @bind-Value="loginModel.UserId"
+                                   id="username"
+                                   class="form-input"
+                                   placeholder="@(isAdminLogin ? "Enter Admin ID" : "60020656")"
+                                   disabled="@isLoading"
+                                   autocomplete="username" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.UserId)" class="error-message" />
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <span class="label-icon">🔐</span>
+                        <span>Password</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔐</span>
+                        <InputText type="password" 
+                                   @bind-Value="loginModel.Password"
+                                   id="password"
+                                   class="form-input"
+                                   placeholder="••••••••"
+                                   disabled="@isLoading"
+                                   autocomplete="current-password" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Password)" class="error-message" />
+                </div>
+
+                <!-- CAPTCHA Field -->
+                <div class="form-group">
+                    <label for="captcha" class="form-label">
+                        <span class="label-icon">🔒</span>
+                        <span>CAPTCHA</span>
+                    </label>
+                    <div class="captcha-wrapper">
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <InputText @bind-Value="loginModel.Captcha"
+                                       id="captcha"
+                                       class="form-input"
+                                       placeholder="gfgg"
+                                       disabled="@isLoading"
+                                       autocomplete="off" />
+                        </div>
+                        <div class="captcha-image">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50'%3E%3Crect fill='%23f0f0f0' width='100' height='50'/%3E%3Ctext x='10' y='35' font-size='24' fill='%23333'%3Egfgg%3C/text%3E%3C/svg%3E" alt="CAPTCHA" />
+                        </div>
+                        <button type="button" class="captcha-refresh" title="Refresh CAPTCHA">🔄</button>
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Captcha)" class="error-message" />
+                </div>
+
+                <!-- Button Group -->
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-submit" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner"></span>
+                            <span>Signing in...</span>
+                        }
+                        else
+                        {
+                            <span>➤ Submit</span>
+                        }
+                    </button>
+                    <button type="button" class="btn btn-forgot" @onclick="HandleForgotPassword" disabled="@isLoading">
+                        🔄 Forgot Password
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private bool isLoading = false;
+    private bool isAdminLogin = false;
+    private string errorMessage = "";
+
+    private class LoginModel
+    {
+        [Required(ErrorMessage = "User ID is required")]
+        public string UserId { get; set; } = "";
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = "";
+
+        [Required(ErrorMessage = "CAPTCHA is required")]
+        public string Captcha { get; set; } = "";
+    }
+
+    private void SwitchTab(bool admin)
+    {
+        isAdminLogin = admin;
+        loginModel = new();
+        errorMessage = "";
+    }
+
+    private async Task HandleLogin()
+    {
+        if (loginModel.Captcha?.ToLower() != "gfgg")
+        {
+            errorMessage = "Invalid CAPTCHA. Please enter the correct CAPTCHA code.";
+            loginModel.Captcha = "";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = "";
+        StateHasChanged();
+
+        await Task.Delay(800);
+
+        if (isAdminLogin)
+        {
+            if (loginModel.UserId == "admin" && loginModel.Password == "admin123")
+            {
+                await Auth.SetUser(loginModel.UserId, "Admin");
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Invalid admin credentials. Please try again.";
+                loginModel.Password = "";
+            }
+        }
+        else
+        {
+            if (loginModel.UserId == "60020656" && loginModel.Password == "user123")
+            {
+                await Auth.SetUser(loginModel.UserId, "User");
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Invalid user credentials. Please try again.";
+                loginModel.Password = "";
+            }
+        }
+        
+        isLoading = false;
+    }
+
+    private void HandleForgotPassword()
+    {
+        errorMessage = "Password reset functionality coming soon.";
+    }
+
+    private void ClearError()
+    {
+        errorMessage = "";
+    }
+}

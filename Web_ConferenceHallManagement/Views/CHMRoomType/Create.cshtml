@@ -1,0 +1,40 @@
+﻿@model MasterCHRoomTypeVM
+
+@{
+    ViewData["Title"] = "Create";
+}
+<div class="container">
+    <h1>Create</h1>
+
+    <h4 class="text-decoration-underline">Master Conferenece Hall Room Type</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group">
+                    <label asp-for="RoomTypeEn" class="control-label"></label>
+                    <input asp-for="RoomTypeEn" class="form-control" />
+                    <span asp-validation-for="RoomTypeEn" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="RoomTypeHi" class="control-label"></label>
+                    <input asp-for="RoomTypeHi" class="form-control" />
+                    <span asp-validation-for="RoomTypeHi" class="text-danger"></span>
+                </div>
+                <br />
+                <div class="form-group">
+                    <button class="btn btn-success"><i class="bi bi-floppy"></i>&nbsp;Save</button> |
+                    <a class="btn btn-secondary" asp-action="Index"><i class="bi bi-list"></i>&nbsp;Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

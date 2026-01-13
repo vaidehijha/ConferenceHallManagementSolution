@@ -1,0 +1,106 @@
+﻿@rendermode InteractiveServer
+@implements IDisposable
+
+@using ConferenceHallManagement.Web.Services
+@inject AuthState Auth
+@inject NavigationManager Nav
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Conference Hall Management</a>
+        @if (Auth.IsLoggedIn)
+        {
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="text-light">@Auth.UserId</span>
+                <span class="badge bg-info">@Auth.Role</span>
+                <button class="btn btn-sm btn-danger" @onclick="HandleLogout">Logout</button>
+            </div>
+        }
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="login">
+                <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
+            </NavLink>
+        </div>
+
+        @if (Auth.IsLoggedIn && Auth.Role == "Admin")
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="counter">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="weather">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+                </NavLink>
+            </div>
+        }
+
+        <div class="nav-item px-3">
+            <NavLink href="/booking-status" class="nav-link">
+                <span class="bi bi-calendar-check" aria-hidden="true"></span> Booking Status Master
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink href="/room-type" class="nav-link">
+                <span class="bi bi-door-open" aria-hidden="true"></span> Room Type Master
+            </NavLink>
+        </div>
+      
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="hall-configuration">
+                <span class="bi bi-building-add" aria-hidden="true"></span> Hall Config
+            </NavLink>
+        </div>
+
+        @if (Auth.IsLoggedIn)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/masters/temployee">
+                    <span class="bi bi-people-fill" aria-hidden="true"></span> Employee Role
+                </NavLink>
+            </div>
+        }
+
+    </nav>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.InitializeAsync();
+        Auth.OnAuthStateChanged += HandleAuthStateChanged;
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleLogout()
+    {
+        await Auth.Logout();
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        Auth.OnAuthStateChanged -= HandleAuthStateChanged;
+    }
+}
+

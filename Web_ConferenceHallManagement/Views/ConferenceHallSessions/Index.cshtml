@@ -1,0 +1,57 @@
+﻿@model IEnumerable<ConferenceHallSessionVM>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="container">
+
+    <h3 class="text-decoration-underline"><i class="bi bi-list"></i>&nbsp;@(ViewBag?.HallName ?? "Hall") - Sessions</h3>
+
+    <p>
+        <a class="btn btn-secondary my-2" asp-controller="ConferenceHall" asp-action="Index" ><i class="bi bi-arrow-left-circle"></i>&nbsp;&nbsp;Backt to Halls</a> |
+        <a class="btn btn-warning my-2" asp-action="Create" asp-route-id="@ViewBag.HallId"><i class="bi bi-plus-circle"></i>&nbsp;&nbsp;Create Session</a>
+
+    </p>
+
+    <table id="statustable" class="table table-bordered table-hover display">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.SessionEn)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SessionHi)
+                </th>
+
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.SessionEn)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.SessionHi)
+                    </td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.SessionId"><i class="bi bi-pencil-square"></i>&nbsp;Edit</a> |
+                        <a class="btn btn-success btn-sm" asp-action="Details" asp-route-id="@item.SessionId"><i class="bi bi-binoculars"></i>&nbsp;Details</a> |
+                        <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@item.SessionId"><i class="bi bi-x-circle"></i>&nbsp;Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready( function () {
+        $('#statustable').DataTable();
+    } );
+
+</script>

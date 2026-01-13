@@ -1,0 +1,61 @@
+﻿@model IEnumerable<MasterCHBookingStatusVM>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="container">
+
+
+    <h3 class="text-decoration-underline"><i class="bi bi-list"></i>&nbsp;Master Conferenece Hall Booking Statuses</h3>
+
+    <p>
+        <a class="btn btn-warning my-2" asp-action="Create"><i class="bi bi-plus-circle"></i>&nbsp;&nbsp;Create New</a>
+    </p>
+    <table id="statustable" class="table table-bordered table-hover display">
+        <thead>
+            <tr class="bg-secondary text-light">
+                <th>
+                    @Html.DisplayNameFor(model => model.MasterBookingStatusId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.StatusTextEn)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.StatusTextHi)
+                </th>
+
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.MasterBookingStatusId)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StatusTextEn)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StatusTextHi)
+                    </td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.MasterBookingStatusId"><i class="bi bi-pencil-square"></i>&nbsp;Edit</a> |
+                        <a class="btn btn-success btn-sm" asp-action="Details" asp-route-id="@item.MasterBookingStatusId"><i class="bi bi-binoculars"></i>&nbsp;Details</a> |
+                        <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@item.MasterBookingStatusId"><i class="bi bi-x-circle"></i>&nbsp;Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready( function () {
+        $('#statustable').DataTable();
+    } );
+
+</script>

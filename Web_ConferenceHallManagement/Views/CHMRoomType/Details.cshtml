@@ -1,0 +1,38 @@
+﻿@model MasterCHRoomTypeVM
+
+@{
+    ViewData["Title"] = "Details";
+}
+<div class="container">
+    <h1>Details</h1>
+
+    <div>
+        <h4 class="text-decoration-underline">Master Conferenece Hall Room Type</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.RoomTypeId)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.RoomTypeId)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.RoomTypeEn)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.RoomTypeEn)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.RoomTypeHi)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.RoomTypeHi)
+            </dd>
+
+        </dl>
+    </div>
+    <div>
+        <a class="btn btn-warning" asp-action="Edit" asp-route-id="@Model?.RoomTypeId"><i class="bi bi-pencil-square"></i>&nbsp;Edit</a> |
+        <a class="btn btn-secondary" asp-action="Index"><i class="bi bi-list"></i>&nbsp;Back to List</a>
+    </div>
+</div>

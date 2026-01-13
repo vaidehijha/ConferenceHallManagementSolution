@@ -1,0 +1,146 @@
+﻿@model ConferenceHallBookingVM
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div class="container">
+    <br />
+    <div class="card col-md-10 mx-auto bg-light">
+        <h5 class="card-header bg-warning text-center"><i class="bi bi-building-add"></i>&nbsp;&nbsp;Update Conference Hall Booking - @Model?.StatusNavigation.StatusTextEn</h5>
+        <div class="card-body">
+
+            <div class="row w-75 mx-auto">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="BookingId" />
+                    <div class="row w-100 mx-auto">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label asp-for="StartDate" class="control-label fw-bold"><i class="bi bi-calendar3"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.StartDate)</label>
+                                <input asp-for="StartDate" type="text" class="form-control date" readonly disabled />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label asp-for="EndDate" class="control-label fw-bold"><i class="bi bi-calendar3"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.EndDate)</label>
+                                <input asp-for="EndDate" type="text" class="form-control date" readonly disabled />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label asp-for="HallId" class="control-label fw-bold"><i class="bi bi-check2-square"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.HallId)</label>
+                                <select id="HallDropdown" asp-for="HallId" class="form-control" asp-items="ViewBag.HallId" disabled>
+                                    <option value="0">-- Please Select Hall --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label asp-for="RoomTypeId" class="control-label fw-bold"><i class="bi bi-check2-square"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.RoomTypeId)</label>
+                                <select asp-for="RoomTypeId" class="form-control" asp-items="ViewBag.RoomTypeId"></select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <div class="form-group">
+                                <label asp-for="ProgramName" class="control-label fw-bold"><i class="bi bi-card-text"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.ProgramName)</label>
+                                <input asp-for="ProgramName" class="form-control" />
+                                <span asp-validation-for="ProgramName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label asp-for="NoOfAttendees" class="control-label fw-bold"><i class="bi bi-people-fill"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.NoOfAttendees)</label>
+                                <input asp-for="NoOfAttendees" class="form-control" />
+                                <span asp-validation-for="NoOfAttendees" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <div class="form-group">
+                                <label asp-for="Remarks" class="control-label fw-bold"><i class="bi bi-chat-left-text"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.Remarks)</label>
+                                <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <button class="btn btn-success" asp-action="Edit"><i class="bi bi-floppy"></i>&nbsp;Update</button> |
+                                <a class="btn btn-secondary" asp-action="Index"><i class="bi bi-list"></i>&nbsp;Back to List</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <br />
+                <div class="col-12 my-3">
+                    <h6 class="card-header bg-warning text-center"><i class="bi bi-bookmark-check"></i>&nbsp;&nbsp;Booked Sessions</h6>
+                    @* <label asp-for="Groups" class="control-label"></label> *@
+                    <table class="table table-hover table-bordered">
+                        @{
+                            int slNo = 1;
+                        }
+                        @if (Model != null && Model.ConferenceHallBookingSessions != null)
+                        {
+                            foreach (var session in Model.ConferenceHallBookingSessions)
+                            {
+
+                                <form asp-action="DeleteSession">
+                                <tr>
+                                    <td>
+                                        @slNo
+                                    </td>
+                                    <td>
+                                        <input type="hidden" asp-for="@session.Id" />
+                                        @session.BookingDate.ToString("ddd, dd-MMM-yyyy") -
+                                        @session.Session.SessionEn
+                                    </td>
+                                    <td>
+                                        @session?.StatusNavigation?.StatusTextEn
+                                    </td>
+                                    <td>
+                                            @if (session?.StatusNavigation.MasterBookingStatusId != 3 && session?.StatusNavigation.MasterBookingStatusId != 4)
+                                            {
+                                            <button class="btn btn-sm btn-danger" asp-controller="ConferenceHallBookings" asp-action="DeleteSession" asp-route-id="@session?.Id" onclick="return confirm('Are you sure you want to delete this booking session?');" data-bs-toggle="tooltip" title="Delete this booking session">X</button>
+                                            }
+                                            
+                                    </td>
+
+                                </tr>
+                                </form>
+                                slNo++;
+                            }
+
+                        }
+                    </table>
+                </div>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $(".date").datepicker({
+            dateFormat: $.datepicker.RFC_1036,
+            changeMonth: true,
+            changeYear: true,
+        });
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

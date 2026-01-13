@@ -1,0 +1,309 @@
+﻿@page "/masters/room-type"
+@page "/room-type"
+@rendermode InteractiveServer
+
+@inject IMasterRoomTypeBlazorService Service
+@inject NavigationManager Nav
+@inject ILogger<Index> Logger
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h3><i class="bi bi-door-open"></i> Master Room Type</h3>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="/room-type/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add New Room Type
+            </a>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+            <p class="mt-3 text-muted">Loading room types...</p>
+        </div>
+    }
+    else if (AllRoomTypeList == null || !AllRoomTypeList.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill"></i> No room types found.
+            <a href="/room-type/create" class="alert-link">Create one now</a>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-0 mt-2">
+                            <i class="bi bi-table"></i> Room Type List
+                        </h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Search by Room Type or ID..."
+                                   value="@searchTerm"
+                                   @oninput="HandleSearchInput" />
+
+                            @if (!string.IsNullOrWhiteSpace(searchTerm))
+                            {
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        @onclick="ClearSearch">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            }
+                        </div>
+
+                        @if (isSearching)
+                        {
+                            <small class="text-muted d-block mt-1">
+                                <i class="bi bi-hourglass-split"></i> Searching...
+                            </small>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Room Type ID</th>
+                                <th>Room Type (English)</th>
+                                <th>Room Type (Hindi)</th>
+                                <th>Active</th>
+                                <th style="width:180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (RoomTypeList.Any())
+                            {
+                                @foreach (var item in RoomTypeList)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                @item.RoomTypeId
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong>@item.RoomTypeEn</strong>
+                                        </td>
+                                        <td>@item.RoomTypeHi</td>
+                                        <td>
+                                            @if (item.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <!-- ✅ Edit Button Fix -->
+                                                <a href="/room-type/edit/@item.RoomTypeId"
+                                                   class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+
+                                                <!-- ✅ Delete Button Fix -->
+                                                <button class="btn btn-sm btn-danger"
+                                                        disabled="@(isDeleting && deletingId == item.RoomTypeId)"
+                                                        @onclick="() => HandleDeleteClick(item.RoomTypeId)">
+                                                    @if (isDeleting && deletingId == item.RoomTypeId)
+                                                    {
+                                                        <span class="spinner-border spinner-border-sm"></span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-trash"></i>
+                                                    }
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        No results found for "<strong>@searchTerm</strong>"
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    private List<MasterRoomTypeVM> AllRoomTypeList = new();
+    private List<MasterRoomTypeVM> RoomTypeList = new();
+
+    private bool isLoading;
+    private bool isDeleting;
+    private bool isSearching;
+    private int deletingId;
+    private string searchTerm = string.Empty;
+
+    private CancellationTokenSource? searchCancellation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            var data = await Service.GetAllAsync();
+            AllRoomTypeList = data?.ToList() ?? new();
+            RoomTypeList = new(AllRoomTypeList);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading room types");
+            await JS.InvokeVoidAsync("toastrError", "Failed to load room types", "Error");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        searchCancellation?.Cancel();
+        searchCancellation = new();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(300, searchCancellation.Token);
+                await InvokeAsync(PerformSearch);
+            }
+            catch { }
+        });
+    }
+
+    private void PerformSearch()
+    {
+        isSearching = true;
+        StateHasChanged();
+
+        RoomTypeList = FilterBySearchTerm(AllRoomTypeList, searchTerm).ToList();
+
+        isSearching = false;
+        StateHasChanged();
+    }
+
+    private void ClearSearch()
+    {
+        searchCancellation?.Cancel();
+        searchTerm = "";
+        RoomTypeList = new(AllRoomTypeList);
+        StateHasChanged();
+    }
+
+    private async Task HandleDeleteClick(int id)
+    {
+        try
+        {
+            var confirmed = await JS.InvokeAsync<bool>(
+                "showConfirmDialog",
+                "Delete Room Type?",
+                $"Are you sure you want to delete? This action will mark the room type as inactive.",
+                "warning",
+                "Yes, delete it!",
+                "Cancel");
+
+            if (!confirmed)
+                return;
+
+            isDeleting = true;
+            deletingId = id;
+            StateHasChanged();
+
+            Logger.LogInformation($"Deleting room type ID: {id}");
+
+            var result = await Service.DeleteAsync(id);
+
+            if (result > 0)
+            {
+                await JS.InvokeVoidAsync("toastrSuccess",
+                    $"Room type deleted successfully!",
+                    "Success");
+
+                await LoadData();
+
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    RoomTypeList = FilterBySearchTerm(AllRoomTypeList, searchTerm).ToList();
+                }
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("toastrWarning",
+                    "Failed to delete room type. No changes were made.",
+                    "Warning");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error deleting room type {id}");
+            await JS.InvokeVoidAsync("toastrError", "Failed to delete room type", "Error");
+        }
+        finally
+        {
+            isDeleting = false;
+            deletingId = 0;
+            StateHasChanged();
+        }
+    }
+
+    private IEnumerable<MasterRoomTypeVM> FilterBySearchTerm(
+        IEnumerable<MasterRoomTypeVM> list, string term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return list;
+
+        term = term.ToLower();
+
+        return list.Where(x =>
+            (!string.IsNullOrEmpty(x.RoomTypeEn) && x.RoomTypeEn.ToLower().Contains(term)) ||
+            (!string.IsNullOrEmpty(x.RoomTypeHi) && x.RoomTypeHi.ToLower().Contains(term)) ||
+            x.RoomTypeId.ToString().Contains(term));
+    }
+
+    public void Dispose()
+    {
+        searchCancellation?.Cancel();
+        searchCancellation?.Dispose();
+    }
+}

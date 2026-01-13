@@ -1,0 +1,236 @@
+﻿@model IEnumerable<ConferenceHallBookingVM>
+@{
+    ViewData["Title"] = "Admin Index";
+    var approvalList = Model.Where(x => x.StatusNavigation.MasterBookingStatusId == 1);
+}
+
+<div class="container ">
+
+    
+    <div class="row w-100 mx-auto">
+        <div class="card bg-light">
+            <h6 class="card-header bg-warning text-center fw-bold"><i class="bi bi-list"></i>&nbsp;Pending Approval List Of Conferenece Halls</h6>
+            <div class="card-body">
+                @if (approvalList != null && approvalList.Count() > 0)
+                {
+                    <table id="statustable" class="table table-hover table-sm table-bordered display nowrap">
+                        <thead>
+                            <tr>
+                                <th>Actions</th>
+                                <th>
+                                    Hall Details
+                                </th>
+                                <th>
+                                    Seating Type
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.StartDate)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.EndDate)
+                                </th>
+                                <th>
+                                    Program Name
+                                </th>
+                                <th>
+                                    No. Of Attendees
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.Remarks)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.StatusNavigation)
+                                </th>
+                                <th>Session Details</th>
+
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in approvalList)
+                            {
+                                <tr>
+                                    <td rowspan="2">
+                                        <div class="btn-group">
+                                            <form asp-action="Approve">
+                                                <input type="hidden" asp-for="@item.BookingId" />
+
+                                                <button class="btn btn-success" asp-action="Approve" asp-route-id="@item.BookingId" data-bs-toggle="tooltip" title="Approve this booking" onclick="return confirm('Are you sure you want to Approve this booking?');"><i class="bi bi-check-circle"></i></button>
+                                            </form>
+
+                                            <form asp-action="Reject">
+                                                <input type="hidden" asp-for="@item.BookingId" />
+                                                <button class="btn btn-danger" asp-action="Reject" asp-route-id="@item.BookingId" data-bs-toggle="tooltip" title="Reject this booking" onclick="return confirm('Are you sure you want to Reject this booking?');"><i class="bi bi-x-circle"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                    <td >
+                                        <label>@item.Hall.HallNameEn - @item.Hall.Floor</label>
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.RoomType.RoomTypeEn)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.StartDate)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.EndDate)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.ProgramName)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.NoOfAttendees)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Remarks)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.StatusNavigation.StatusTextEn)
+                                    </td>
+                                    <td colspan="7">
+                                        <ul>
+                                            @if (item?.ConferenceHallBookingSessions?.Count(x => x.Status != 3 && x.Status != 4) > 0)
+                                            {
+                                                foreach (var session in item.ConferenceHallBookingSessions)
+                                                {
+                                                    <li class="border-bottom p-2">
+                                                        @session.BookingDate.ToLongDateString() - @session.Session.SessionEn
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </td>
+
+                                    
+                                </tr>
+                                
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <h6 class="text-center">-- No Data --</h6>
+                }
+            </div>
+        </div>
+    </div>
+    <br />
+    
+    <div class="row w-100 mx-auto">
+        <div class="card bg-light">
+            <h6 class="card-header bg-warning text-center fw-bold"><i class="bi bi-list"></i>&nbsp;Conferenece Halls Booking History</h6>
+            <div class="card-body">
+                <table id="statustable1" class="table table-sm table-bordered table-hover display nowrap">
+                    <thead>
+                        <tr>
+                            <th>
+                                Hall Details
+                            </th>
+                            <th>
+                                Seating Type
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.StartDate)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.EndDate)
+                            </th>
+                            <th>
+                                Program Name
+                            </th>
+                            <th>
+                                No. Of Attendees
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Remarks)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.StatusNavigation)
+                            </th>
+                            <th>
+                                Sessions Booked Count
+                            </th>
+                            <th>
+                                Active Sessions Count
+                            </th>
+                            <th>
+                                Sessions Detail
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Where(x=>x.StatusNavigation.MasterBookingStatusId != 1))
+                        {
+                            <tr>
+                                <td>
+                                    <label>@item.Hall.HallNameEn - @item.Hall.Floor</label>
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.RoomType.RoomTypeEn)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.StartDate)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.EndDate)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.ProgramName)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.NoOfAttendees)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Remarks)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.StatusNavigation.StatusTextEn)
+                                </td>
+                                <td>
+                                    @item?.ConferenceHallBookingSessions?.Count
+                                </td>
+                                <td>
+                                    @item?.ConferenceHallBookingSessions?.Count(x => x.Status != 3 && x.Status != 4)
+                                </td>
+                                <td >
+                                    <ul>
+                                        @if (item?.ConferenceHallBookingSessions?.Count(x => x.Status != 3 && x.Status != 4) > 0)
+                                        {
+                                            foreach (var session in item.ConferenceHallBookingSessions)
+                                            {
+                                                <li class="border-bottom p-2">
+                                                    @session.BookingDate.ToLongDateString() - @session.Session.SessionEn - @session.StatusNavigation.StatusTextEn
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </td>                                
+                            </tr>                            
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    
+   
+</div>
+<br />
+
+<script>
+    
+    $(document).ready( function () {
+        $('#statustable1').DataTable({
+            responsive: true
+        });
+        $('#statustable').DataTable({
+            responsive: true
+        });
+    } );
+
+
+</script>
+

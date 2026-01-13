@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+    <div class="text-center mb-3">
+        <h4 class="">Welcome, POWERGRID's Conference Hall Booking Management</h4>
+
+    </div>
+    <div class="row w-100 mx-auto justify-content-center">
+        <div class="col-md-4">
+            <a asp-action="Index" asp-controller="ConferenceHallBookings" class="text-decoration-none text-black">
+            <div class="card bg-warning">
+                <div class="card-body text-center">
+                    <h5>My Bookings</h5>
+                    <h2>10 Nos.</h2>
+                </div>
+            </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-warning">
+                <div class="card-body text-center">
+                    <h5>Halls Configured</h5>
+                    <h2>2 Nos.</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

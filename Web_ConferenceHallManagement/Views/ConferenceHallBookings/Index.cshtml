@@ -1,0 +1,110 @@
+﻿@model IEnumerable<ConferenceHallBookingVM>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="container">
+
+    <h3 class="text-decoration-underline"><i class="bi bi-list"></i>&nbsp;List Of Conferenece Halls</h3>
+
+    <p>
+        <a class="btn btn-warning my-2" asp-action="Create"><i class="bi bi-plus-circle"></i>&nbsp;&nbsp;Create New</a>
+    </p>
+
+    <table id="statustable" class="table table-sm table-bordered table-hover display">
+        <thead>
+            <tr>
+                <th>
+                    Hall Details
+                </th>
+                <th>
+                    Seating Type
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.StartDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.EndDate)
+                </th>
+                <th>
+                    Program Name
+                </th>
+                <th>
+                    No. Of Attendees
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Remarks)
+                </th>                
+                <th>
+                    @Html.DisplayNameFor(model => model.StatusNavigation)
+                </th>
+                <th>
+                    Sessions Booked
+                </th>
+                <th>
+                    Active Sessions
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <label>@item.Hall.HallNameEn - @item.Hall.Floor</label>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.RoomType.RoomTypeEn)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StartDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.EndDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ProgramName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.NoOfAttendees)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Remarks)
+                    </td>                    
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StatusNavigation.StatusTextEn)
+                    </td>
+                    <td>
+                        @item.ConferenceHallBookingSessions.Count
+                    </td>
+                    <td>
+                        @item.ConferenceHallBookingSessions.Count(x=>x.Status != 3 && x.Status != 4)
+                    </td>
+                    <td>
+                        @if (item.StatusNavigation.MasterBookingStatusId != 3 && item.StatusNavigation.MasterBookingStatusId != 4)
+                        {
+                            <div class="btn-group">
+                                <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.BookingId" data-bs-toggle="tooltip" title="Edit this booking" onclick="return confirm('Are you sure you want to edit this booking?');"><i class="bi bi-pencil-square"></i></a>
+                                
+                                 <form asp-action="Delete">
+                                    <input type="hidden" asp-for="@item.BookingId" />
+                                    <button class="btn btn-danger" asp-action="Delete" asp-route-id="@item.BookingId" data-bs-toggle="tooltip" title="Delete this booking" onclick="return confirm('Are you sure you want to delete this booking?');"><i class="bi bi-x-circle"></i></button>
+                                </form>
+                            </div>
+                        }
+                        
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<br />
+<script>
+    $(document).ready( function () {
+        $('#statustable').DataTable();
+    } );
+
+</script>

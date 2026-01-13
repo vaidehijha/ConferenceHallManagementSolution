@@ -1,0 +1,240 @@
+﻿@page "/masters/temployee/create"
+@rendermode InteractiveServer
+@using ConferenceHallManagement.Web.ViewModels
+@using ConferenceHallManagement.web.Services
+@using ConferenceHallManagement.Web.Services
+@inject ITempEmployeeRoleBlazorService Service
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject AuthState Auth
+
+<PageTitle>Add Employee Role Assignment</PageTitle>
+
+@if (!Auth.IsLoggedIn)
+{
+    <div class="container-fluid py-5">
+        <div class="alert alert-warning text-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill display-3 d-block mb-3"></i>
+            <h4 class="alert-heading">Access Denied</h4>
+            <p>You must be logged in to create Employee Roles.</p>
+            <hr>
+            <p class="mb-0">
+                <a href="/login" class="btn btn-primary">Go to Login</a>
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container-fluid p-4">
+        <EditForm Model="model" OnValidSubmit="CreateRole">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="alert alert-danger" />
+
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h4 class="mb-0">
+                                <i class="bi bi-person-plus-fill me-2"></i>
+                                Add Employee Role Assignment
+                            </h4>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Employee No -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-person-badge me-1"></i>
+                                    Employee Number <span class="text-danger">*</span>
+                                </label>
+                                <InputText class="form-control form-control-lg" 
+                                           @bind-Value="model.EmployeeNo" 
+                                           placeholder="Enter employee number (e.g., 60020656)"
+                                           disabled="@isSaving" />
+                                <ValidationMessage For="@(() => model.EmployeeNo)" class="text-danger small mt-1" />
+                            </div>
+
+                            <!-- Region ID (Fixed) -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-geo-alt-fill me-1"></i>
+                                    Region
+                                </label>
+                                <select class="form-select form-select-lg" disabled>
+                                    <option value="1" selected>Corporate Centre</option>
+                                </select>
+                                <small class="text-muted">Region is fixed to Corporate Centre</small>
+                            </div>
+
+                            <!-- Location Dropdown -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-building me-1"></i>
+                                    Location <span class="text-danger">*</span>
+                                </label>
+                                <InputSelect class="form-select form-select-lg" 
+                                             @bind-Value="model.LocationId"
+                                             disabled="@isSaving">
+                                    <option value="0">-- Select Location --</option>
+                                    <option value="1">Corporate Office</option>
+                                    <option value="2">Manesar</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => model.LocationId)" class="text-danger small mt-1" />
+                            </div>
+
+                            <!-- Department ID -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-diagram-3-fill me-1"></i>
+                                    Department ID
+                                </label>
+                                <InputNumber class="form-control form-control-lg" 
+                                             @bind-Value="model.DepartmentId"
+                                             placeholder="Enter department ID"
+                                             disabled="@isSaving" />
+                                <small class="text-muted">Optional: Leave blank if not applicable</small>
+                            </div>
+
+                            <!-- Role Dropdown -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-shield-fill-check me-1"></i>
+                                    Role <span class="text-danger">*</span>
+                                </label>
+                                <InputSelect class="form-select form-select-lg" 
+                                             @bind-Value="model.RoleId"
+                                             disabled="@isSaving">
+                                    <option value="0">-- Select Role --</option>
+                                    <option value="1">Super Admin</option>
+                                    <option value="2">Central Admin</option>
+                                    <option value="3">Regional Admin</option>
+                                    <option value="4">Station Admin</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => model.RoleId)" class="text-danger small mt-1" />
+                            </div>
+
+                            <!-- Is Allow Write Checkbox -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <InputCheckbox class="form-check-input" 
+                                                   @bind-Value="model.IsAllowWrite" 
+                                                   id="allowWrite"
+                                                   disabled="@isSaving" />
+                                    <label class="form-check-label fw-bold" for="allowWrite">
+                                        <i class="bi bi-pencil-fill me-1"></i>
+                                        Allow Write Permissions
+                                    </label>
+                                </div>
+                                <small class="text-muted ms-4">Enable if the user can create/edit/delete records</small>
+                            </div>
+
+                            <!-- Is Active Checkbox -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <InputCheckbox class="form-check-input" 
+                                                   @bind-Value="model.IsActive" 
+                                                   id="isActive"
+                                                   disabled="@isSaving" />
+                                    <label class="form-check-label fw-bold" for="isActive">
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        Active Status
+                                    </label>
+                                </div>
+                                <small class="text-muted ms-4">Inactive roles will not have system access</small>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex gap-3 justify-content-end">
+                                <button type="button" class="btn btn-outline-secondary btn-lg px-4"
+                                        @onclick="Cancel" disabled="@isSaving">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Cancel
+                                </button>
+                                <button class="btn btn-success btn-lg px-4" type="submit" disabled="@isSaving">
+                                    @if (isSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        <span>Saving...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        <span>Save Assignment</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+}
+
+@code {
+    private TempEmployeeRoleVM model = new() 
+    { 
+        RegionId = 1, 
+        IsActive = true,
+        ApplicationId = 1  // Auto-set Application ID
+    };
+    private bool isSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.InitializeAsync();
+        // Application ID is automatically set to 1 for Conference Hall Management
+        model.ApplicationId = 1;
+    }
+
+    private async Task CreateRole()
+    {
+        // Validation
+        if (string.IsNullOrWhiteSpace(model.EmployeeNo))
+        {
+            await JS.InvokeVoidAsync("alert", "❌ Employee Number is required!");
+            return;
+        }
+
+        if (model.LocationId == 0)
+        {
+            await JS.InvokeVoidAsync("alert", "❌ Please select a Location!");
+            return;
+        }
+
+        if (model.RoleId == 0)
+        {
+            await JS.InvokeVoidAsync("alert", "❌ Please select a Role!");
+            return;
+        }
+
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            int result = await Service.CreateAsync(model);
+            if (result > 0)
+            {
+                await JS.InvokeVoidAsync("alert", "✅ Employee role assignment created successfully!");
+                Navigation.NavigateTo("/masters/temployee", forceLoad: true);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "❌ Failed to create role assignment!");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"❌ Error: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/masters/temployee");
+}

@@ -1,0 +1,208 @@
+@page "/booking-status/edit/{Id:int}"
+@page "/masters/booking-status/edit/{Id:int}"
+@rendermode InteractiveServer
+@inject IMasterBookingStatusBlazorService Service
+@inject NavigationManager NavigationManager
+@inject ILogger<Edit> Logger
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edit Booking Status</h4>
+                </div>
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading status details...</p>
+                        </div>
+                    }
+                    else if (editModel == null)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-circle-fill"></i> Status not found.
+                        </div>
+                        <button type="button" class="btn btn-secondary" @onclick="HandleCancel">
+                            <i class="bi bi-arrow-left"></i> Go Back
+                        </button>
+                    }
+                    else
+                    {
+                        <EditForm Model="@editModel" OnValidSubmit="HandleUpdate">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            <div class="mb-3">
+                                <label class="form-label">ID</label>
+                                <input type="text" class="form-control" value="@editModel.Id" disabled />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Status ID</label>
+                                <input type="text" class="form-control" value="@editModel.StatusId" disabled />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="statusName" class="form-label">
+                                    Status Name (English) <span class="text-danger">*</span>
+                                </label>
+                                <InputText id="statusName" 
+                                           class="form-control" 
+                                           @bind-Value="editModel.StatusName" 
+                                           placeholder="Enter status name in English"
+                                           disabled="@isSaving" />
+                                <ValidationMessage For="@(() => editModel.StatusName)" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="statusNameHindi" class="form-label">
+                                    Status Name (Hindi)
+                                </label>
+                                <InputText id="statusNameHindi" 
+                                           class="form-control" 
+                                           @bind-Value="editModel.StatusNameHindi" 
+                                           placeholder="Enter status name in Hindi"
+                                           disabled="@isSaving" />
+                                <ValidationMessage For="@(() => editModel.StatusNameHindi)" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <InputCheckbox id="isActive" class="form-check-input" @bind-Value="editModel.IsActive" disabled="@isSaving" />
+                                <label for="isActive" class="form-check-label">
+                                    Is Active
+                                </label>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@isSaving">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </button>
+                                <button type="submit" class="btn btn-warning" disabled="@isSaving">
+                                    @if (isSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <span><i class="bi bi-save"></i> Update</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private MasterBookingStatusVM? editModel;
+    private bool isLoading = false;
+    private bool isSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            
+            Logger.LogInformation($"Loading booking status with ID: {Id}");
+            editModel = await Service.GetByIdAsync(Id);
+            
+            if (editModel == null)
+            {
+                Logger.LogWarning($"Booking status with ID {Id} not found");
+            }
+            else
+            {
+                Logger.LogInformation($"Successfully loaded booking status: {editModel.StatusName}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error loading booking status {Id}");
+            editModel = null;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleUpdate()
+    {
+        try
+        {
+            if (editModel == null)
+            {
+                await JS.InvokeVoidAsync("toastrWarning", "Status data is missing.", "Warning");
+                return;
+            }
+
+            isSaving = true;
+            StateHasChanged();
+
+            Logger.LogInformation($"Updating booking status ID: {editModel.Id}");
+
+            var result = await Service.UpdateAsync(editModel);
+            
+            if (result > 0)
+            {
+                await JS.InvokeVoidAsync("toastrSuccess", $"Status '{editModel.StatusName}' updated successfully!", "Success");
+                Logger.LogInformation($"Successfully updated booking status ID: {editModel.Id}");
+                
+                // Small delay to show success message
+                await Task.Delay(800);
+                
+                // Force navigation
+                NavigationManager.NavigateTo("/booking-status", forceLoad: true);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("toastrWarning", "Failed to update status. No changes were made.", "Warning");
+                Logger.LogWarning($"Update operation returned 0 for ID: {editModel.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating booking status");
+            await JS.InvokeVoidAsync("toastrError", $"Error: {ex.Message}", "Error");
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleCancel()
+    {
+        try
+        {
+            Logger.LogInformation("User cancelled edit, navigating back");
+            NavigationManager.NavigateTo("/booking-status", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during cancel navigation");
+        }
+    }
+}

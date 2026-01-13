@@ -1,0 +1,267 @@
+﻿@page "/masters/roomtype/edit/{Id:int}"
+@page "/room-type/edit/{Id:int}"
+@rendermode InteractiveServer
+@using ConferenceHallManagement.Web.ViewModels
+@inject IMasterRoomTypeBlazorService Service
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+<PageTitle>Edit Room Type</PageTitle>
+
+<div class="container-fluid my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header" style="background-color: #f39c12; color: white;">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>
+                        Edit Room Type
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5 class="mt-3 text-muted">Loading room type details...</h5>
+                        </div>
+                    }
+                    else if (model == null)
+                    {
+                        <div class="alert alert-warning d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                <strong>Room Type Not Found</strong><br />
+                                <small>ID @Id does not exist in database or is inactive.</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="/room-type" class="btn btn-primary">
+                                <i class="bi bi-list-ul"></i> View List
+                            </a>
+                            <a href="/room-type/create" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Create New
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="model" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            <div class="mb-3">
+                                <label class="form-label">ID</label>
+                                <input class="form-control bg-light" value="@model.Id" disabled />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Room Type ID</label>
+                                <input class="form-control bg-light" value="@model.RoomTypeId" disabled />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Room Type (English) <span class="text-danger">*</span>
+                                </label>
+                                <InputText class="form-control"
+                                           @bind-Value="model.RoomTypeEn"
+                                           disabled="@saving"
+                                           placeholder="Enter room type in English" />
+                                <ValidationMessage For="@(() => model.RoomTypeEn)" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Room Type (Hindi)</label>
+                                <InputText class="form-control"
+                                           @bind-Value="model.RoomTypeHi"
+                                           disabled="@saving"
+                                           placeholder="Enter room type in Hindi" />
+                                <ValidationMessage For="@(() => model.RoomTypeHi)" class="text-danger" />
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="model.IsActive" id="isActiveCheck" disabled="@saving" />
+                                    <label class="form-check-label" for="isActiveCheck">
+                                        Is Active
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between gap-2">
+                                <button type="button"
+                                        class="btn btn-secondary px-4"
+                                        @onclick="Cancel"
+                                        disabled="@saving">
+                                    <i class="bi bi-x-circle me-1"></i> Cancel
+                                </button>
+                                <button type="submit"
+                                        class="btn px-4"
+                                        style="background-color: #f39c12; color: white;"
+                                        disabled="@saving">
+                                    @if (saving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-arrow-repeat me-1"></i>
+                                        <span>Update</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private MasterRoomTypeVM? model;
+    private bool isLoading = true;
+    private bool saving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModel();
+    }
+
+    private async Task LoadModel()
+    {
+        try
+        {
+            isLoading = true;
+            Console.WriteLine($"[LoadModel] Loading room type with ID: {Id}");
+            
+            model = await Service.GetByIdAsync(Id);
+
+            if (model == null)
+            {
+                Console.WriteLine($"[LoadModel] Model is NULL for ID: {Id}");
+                await JS.InvokeVoidAsync("Swal.fire", new
+                {
+                    icon = "error",
+                    title = "Not Found",
+                    text = $"Room type with ID {Id} not found in database."
+                });
+            }
+            else
+            {
+                Console.WriteLine($"[LoadModel] Model loaded successfully:");
+                Console.WriteLine($"  - model.Id: {model.Id}");
+                Console.WriteLine($"  - model.RoomTypeId: {model.RoomTypeId}");
+                Console.WriteLine($"  - model.RoomTypeEn: {model.RoomTypeEn}");
+                Console.WriteLine($"  - model.RoomTypeHi: {model.RoomTypeHi}");
+                Console.WriteLine($"  - model.IsActive: {model.IsActive}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LoadModel] Exception: {ex.Message}");
+            Console.WriteLine($"[LoadModel] Stack trace: {ex.StackTrace}");
+            await JS.InvokeVoidAsync("Swal.fire", new
+            {
+                icon = "error",
+                title = "Error",
+                text = $"Failed to load room type: {ex.Message}"
+            });
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (model == null)
+        {
+            Console.WriteLine("[HandleValidSubmit] Model is NULL - cannot submit");
+            return;
+        }
+
+        try
+        {
+            saving = true;
+            StateHasChanged();
+
+            Console.WriteLine("=== STARTING UPDATE ===");
+            Console.WriteLine($"[HandleValidSubmit] Submitting update for:");
+            Console.WriteLine($"  - model.Id: {model.Id}");
+            Console.WriteLine($"  - model.RoomTypeId: {model.RoomTypeId}");
+            Console.WriteLine($"  - model.RoomTypeEn: {model.RoomTypeEn}");
+            Console.WriteLine($"  - model.RoomTypeHi: {model.RoomTypeHi}");
+            Console.WriteLine($"  - model.IsActive: {model.IsActive}");
+
+            var result = await Service.UpdateAsync(model);
+
+            Console.WriteLine($"[HandleValidSubmit] Update result: {result} rows affected");
+
+            if (result > 0)
+            {
+                Console.WriteLine("[HandleValidSubmit] Update successful - showing success message");
+                await JS.InvokeVoidAsync("Swal.fire", new
+                {
+                    icon = "success",
+                    title = "Success!",
+                    text = $"{model.RoomTypeEn} updated successfully!",
+                    showConfirmButton = false,
+                    timer = 1500
+                });
+
+                await Task.Delay(1500);
+                NavigationManager.NavigateTo("/room-type", forceLoad: true);
+            }
+            else
+            {
+                Console.WriteLine("[HandleValidSubmit] ⚠️ WARNING: Update returned 0 rows affected");
+                Console.WriteLine("[HandleValidSubmit] This usually means:");
+                Console.WriteLine("  1. Entity with this ID was not found in database");
+                Console.WriteLine("  2. No actual changes were detected");
+                Console.WriteLine("  3. Database connection or transaction issue");
+                
+                await JS.InvokeVoidAsync("Swal.fire", new
+                {
+                    icon = "warning",
+                    title = "Warning",
+                    text = "Failed to update room type. No changes were made. Check browser console and application logs for details."
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[HandleValidSubmit] ❌ EXCEPTION: {ex.Message}");
+            Console.WriteLine($"[HandleValidSubmit] Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[HandleValidSubmit] Inner exception: {ex.InnerException.Message}");
+            }
+            
+            await JS.InvokeVoidAsync("Swal.fire", new
+            {
+                icon = "error",
+                title = "Error",
+                text = $"Update error: {ex.Message}"
+            });
+        }
+        finally
+        {
+            saving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/room-type", forceLoad: true);
+    }
+}

@@ -1,0 +1,166 @@
+/* Master Booking Status Custom Styles */
+
+/* DataTable Custom Styling */
+#bookingStatusTable_wrapper .dataTables_filter {
+    display: none; /* Hide default DataTables search since we have custom search */
+}
+
+#bookingStatusTable thead th {
+    background-color: #212529 !important;
+    color: white !important;
+    font-weight: 600;
+    border-color: #32383e;
+}
+
+#bookingStatusTable tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+#bookingStatusTable td {
+    vertical-align: middle;
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 8px;
+}
+
+.card-header {
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem 1.5rem;
+}
+
+/* Button Styling */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-group .btn {
+    margin: 0 2px;
+}
+
+/* Badge Styling */
+.badge {
+    padding: 0.4em 0.8em;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    vertical-align: middle;
+}
+
+/* Search Box Styling */
+.input-group {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.input-group .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
+
+/* Alert Styling */
+.alert {
+    border-radius: 6px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+/* Table Responsive */
+.table-responsive {
+    border-radius: 0;
+}
+
+/* DataTables Pagination Styling */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #0d6efd;
+    color: white !important;
+    border-color: #0d6efd;
+}
+
+.dataTables_wrapper .dataTables_info {
+    padding-top: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Form Control Enhancement */
+.form-control:disabled {
+    background-color: #e9ecef;
+    opacity: 0.7;
+}
+
+/* Icon Spacing */
+.bi {
+    margin-right: 0.25rem;
+}
+
+/* Status Badge Colors */
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+        width: 100%;
+    }
+    
+    .card-header .row {
+        flex-direction: column;
+    }
+    
+    .card-header .col-md-6 {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Animation for table rows */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#bookingStatusTable tbody tr {
+    animation: fadeIn 0.3s ease-in-out;
+}

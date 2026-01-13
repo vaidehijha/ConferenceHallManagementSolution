@@ -1,0 +1,323 @@
+﻿@page "/masters/booking-status"
+@page "/booking-status"
+@rendermode InteractiveServer
+@inject IMasterBookingStatusBlazorService Service
+@inject NavigationManager Nav
+@inject ILogger<Index> Logger
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h3><i class="bi bi-list-check"></i> Master Booking Status</h3>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="/booking-status/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add New Status
+            </a>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading booking statuses...</p>
+        </div>
+    }
+    else if (AllBookingStatusList == null || !AllBookingStatusList.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill"></i> No booking statuses found.
+            <a href="/booking-status/create" class="alert-link">Create one now</a>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-0 mt-2"><i class="bi bi-table"></i> Booking Status List</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Search by Status Name or ID..."
+                                   value="@searchTerm"
+                                   @oninput="HandleSearchInput" />
+                            @if (!string.IsNullOrWhiteSpace(searchTerm))
+                            {
+                                <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            }
+                        </div>
+                        @if (isSearching)
+                        {
+                            <small class="text-muted mt-1 d-block">
+                                <i class="bi bi-hourglass-split"></i> Searching...
+                            </small>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="bookingStatusTable" class="table table-hover table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Status ID</th>
+                                <th>Status Name (English)</th>
+                                <th>Status Name (Hindi)</th>
+                                <th>Active</th>
+                                <th style="width: 180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (BookingStatusList.Any())
+                            {
+                                @foreach (var item in BookingStatusList)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-secondary">@item.StatusId</span></td>
+                                        <td><strong>@item.StatusName</strong></td>
+                                        <td>@item.StatusNameHindi</td>
+                                        <td>
+                                            @if (item.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="/booking-status/edit/@item.Id"
+                                                   class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-danger"
+                                                        disabled="@(isDeleting && deletingId == item.Id)"
+                                                        @onclick="() => HandleDeleteClick(item.Id, item.StatusName)">
+                                                    @if (isDeleting && deletingId == item.Id)
+                                                    {
+                                                        <span class="spinner-border spinner-border-sm"></span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-trash"></i>
+                                                    }
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        No results found for "<strong>@searchTerm</strong>"
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    private List<MasterBookingStatusVM> AllBookingStatusList = new();
+    private List<MasterBookingStatusVM> BookingStatusList = new();
+
+    private bool isLoading;
+    private bool isDeleting;
+    private bool isSearching;
+    private int deletingId;
+    private string searchTerm = string.Empty;
+
+    private CancellationTokenSource? searchCancellation;
+    private bool isDataTableInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && BookingStatusList.Any() && !isDataTableInitialized)
+        {
+            await JS.InvokeVoidAsync("initDataTable", "bookingStatusTable");
+            isDataTableInitialized = true;
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            var data = await Service.GetAllAsync();
+            AllBookingStatusList = data?.ToList() ?? new();
+            BookingStatusList = new(AllBookingStatusList);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Load error");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        searchCancellation?.Cancel();
+        searchCancellation = new();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(500, searchCancellation.Token);
+                await InvokeAsync(PerformSearch);
+            }
+            catch { }
+        });
+    }
+
+    private void PerformSearch()
+    {
+        isSearching = true;
+
+        BookingStatusList = FilterBySearchTerm(AllBookingStatusList, searchTerm).ToList();
+
+        isSearching = false;
+        StateHasChanged();
+    }
+
+    private async Task ClearSearch()
+    {
+        searchCancellation?.Cancel();
+        searchTerm = "";
+        BookingStatusList = new(AllBookingStatusList);
+        await JS.InvokeVoidAsync("reinitDataTable", "bookingStatusTable");
+    }
+
+    private async Task HandleDeleteClick(int id, string name)
+    {
+        try
+        {
+            // Show SweetAlert2 confirmation dialog
+            var confirmed = await JS.InvokeAsync<bool>("showConfirmDialog",
+                "Delete Booking Status?",
+                $"Are you sure you want to delete '{name}'? This action will mark the status as inactive.",
+                "warning",
+                "Yes, delete it!",
+                "Cancel");
+
+            if (!confirmed)
+            {
+                return; // User cancelled
+            }
+
+            // Proceed with deletion
+            isDeleting = true;
+            deletingId = id;
+            StateHasChanged();
+
+            Logger.LogInformation($"Attempting to delete booking status ID: {id}");
+            
+            var result = await Service.DeleteAsync(id);
+            
+            Logger.LogInformation($"Delete service returned: {result}");
+            
+            // Always reload data to get fresh state from database
+            Logger.LogInformation("Reloading data after delete attempt");
+            await LoadData();
+
+            // Reapply search filter if active
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                BookingStatusList = FilterBySearchTerm(AllBookingStatusList, searchTerm).ToList();
+            }
+
+            // Check if the specific record was removed from the list
+            var recordExists = AllBookingStatusList.FirstOrDefault(x => x.Id == id);
+            
+            if (recordExists == null)
+            {
+                // Record not in list anymore - successfully deleted
+                await JS.InvokeVoidAsync("toastrSuccess", 
+                    $"Status '{name}' deleted successfully!", 
+                    "Success");
+                Logger.LogInformation($"Booking status ID {id} successfully deleted - not found in list");
+                
+                // Reinitialize DataTable
+                await JS.InvokeVoidAsync("reinitDataTable", "bookingStatusTable");
+            }
+            else
+            {
+                // Record still in list - delete failed
+                await JS.InvokeVoidAsync("toastrWarning", 
+                    "Failed to delete status. No changes were made.", 
+                    "Warning");
+                Logger.LogWarning($"Booking status ID {id} still exists in list after delete attempt");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error deleting booking status {id}");
+            await JS.InvokeVoidAsync("toastrError", 
+                $"Failed to delete: {ex.Message}", 
+                "Error");
+        }
+        finally
+        {
+            isDeleting = false;
+            deletingId = 0;
+            StateHasChanged();
+        }
+    }
+
+    // Local filter method
+    private IEnumerable<MasterBookingStatusVM> FilterBySearchTerm(
+        IEnumerable<MasterBookingStatusVM> list, string term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return list;
+
+        term = term.ToLower();
+
+        return list.Where(x =>
+            (!string.IsNullOrEmpty(x.StatusName) && x.StatusName.ToLower().Contains(term)) ||
+            (!string.IsNullOrEmpty(x.StatusNameHindi) && x.StatusNameHindi.ToLower().Contains(term)) ||
+            x.StatusId.ToString().Contains(term));
+    }
+
+    public void Dispose()
+    {
+        searchCancellation?.Cancel();
+        searchCancellation?.Dispose();
+    }
+}
+

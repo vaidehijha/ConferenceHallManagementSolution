@@ -1,0 +1,187 @@
+﻿@model ConferenceHallBookingVM
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<div class="container">
+    <br />
+    <div class="card col-md-10 mx-auto bg-light">
+        <h5 class="card-header bg-warning text-center"><i class="bi bi-building-add"></i>&nbsp;&nbsp;Book Conference Hall</h5>
+        <div class="card-body">
+            <form asp-action="Create">
+                <div asp-validation-summary="None" class="text-danger"></div>
+                <div class="row w-75 mx-auto">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-group">
+                            <label asp-for="StartDate" class="control-label fw-bold"><i class="bi bi-calendar3"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.StartDate)</label>
+                            <input asp-for="StartDate" type="text" class="form-control date" readonly />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="form-group">
+                            <label asp-for="EndDate" class="control-label fw-bold"><i class="bi bi-calendar3"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.EndDate)</label>
+                            <input asp-for="EndDate" type="text" class="form-control date" readonly />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-group">
+                            <label asp-for="HallId" class="control-label fw-bold"><i class="bi bi-check2-square"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.HallId)</label>
+                            <select id="HallDropdown" asp-for="HallId" class="form-control" asp-items="ViewBag.HallId">
+                                <option value="0">-- Please Select Hall --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="form-group">
+                            <label asp-for="RoomTypeId" class="control-label fw-bold"><i class="bi bi-check2-square"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.RoomTypeId)</label>
+                            <select asp-for="RoomTypeId" class="form-control" asp-items="ViewBag.RoomTypeId"></select>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <div class="form-group">
+                            <label asp-for="ProgramName" class="control-label fw-bold"><i class="bi bi-card-text"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.ProgramName)</label>
+                            <input asp-for="ProgramName" class="form-control" />
+                            <span asp-validation-for="ProgramName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="form-group">
+                            <label asp-for="NoOfAttendees" class="control-label fw-bold"><i class="bi bi-people-fill"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.NoOfAttendees)</label>
+                            <input asp-for="NoOfAttendees" class="form-control" />
+                            <span asp-validation-for="NoOfAttendees" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="form-group">
+                            <label asp-for="Remarks" class="control-label fw-bold"><i class="bi bi-chat-left-text"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.Remarks)</label>
+                            <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    @if (Model != null && Model?.Groups != null && Model.Groups.Count > 0)
+                    {
+                        <div class="col-12">
+                            <label asp-for="Groups" class="control-label fw-bold"><i class="bi bi-hand-index-thumb"></i>&nbsp;&nbsp;@Html.DisplayNameFor(model => model.Groups)</label>
+                            <table class="table table-hover table-bordered table-striped">
+
+                                @for (int i = 0; i < Model.Groups.Count; i++)
+                                {
+                                    <tr>
+                                        <td>
+                                            <!-- ✅ Bind GroupName -->
+                                            <input type="hidden" asp-for="Groups[@i].GroupName" />
+                                            <h6>@Model.Groups[i].GroupName</h6>
+                                        </td>
+
+                                        <td>
+                                            @for (int j = 0; j < Model.Groups[i].Options.Count; j++)
+                                            {
+                                                var option = Model.Groups[i].Options[j];
+
+                                                @* <label>
+                                            <!-- ✅ Bind IsChecked -->
+                                            <input type="checkbox"
+                                                   asp-for="Groups[@i].Options[@j].IsChecked"
+                                                    />
+                                            @option.Label
+                                        </label> *@
+
+                                                <label>
+                                                    <input type="checkbox"
+                                                           asp-for="Groups[@i].Options[@j].IsChecked"
+                                                           disabled="@option.IsDisabled" />
+                                                    &nbsp;&nbsp;@option.Label
+
+                                                    @* 🏷️ Show reason if disabled *@
+                                                    @if (option.IsDisabled && !string.IsNullOrWhiteSpace(option.DisabledReason))
+                                                    {
+                                                        <span style="color: gray;"> (@option.DisabledReason)</span>
+                                                    }
+                                                </label>
+
+                                                <!-- ✅ Hidden inputs for full model binding -->
+                                                <input type="hidden" asp-for="Groups[@i].Options[@j].Id" />
+                                                <input type="hidden" asp-for="Groups[@i].Options[@j].Label" />
+                                                <input type="hidden" asp-for="Groups[@i].Options[@j].IsDisabled" />
+                                                <input type="hidden" asp-for="Groups[@i].Options[@j].DisabledReason" />
+                                                <br />
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+
+                            </table>
+                        </div>
+                    }
+                    <div class="col-md-6">
+                        <br />
+                        <div class="form-group">
+                            @if (Model == null || Model?.Groups == null || Model.Groups.Count == 0)
+                            {
+                                <button class="btn btn-success"><i class="bi bi-floppy"></i>&nbsp;Check Availability</button>
+
+                            }
+                            else
+                            {
+                                <button class="btn btn-success"><i class="bi bi-floppy"></i>&nbsp;Book</button>
+                            }
+
+                            |
+                            <a class="btn btn-secondary" asp-action="Index"><i class="bi bi-list"></i>&nbsp;Back to List</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+<br />
+<script>
+    $(function () {
+        $(".date").datepicker({
+            dateFormat: $.datepicker.RFC_1036,
+            changeMonth: true,
+            changeYear: true,
+        });
+
+    //     $('#HallDropdown').change(function () {
+    //     var hallId = $(this).val();
+    //     $('#SessionDropdown').empty();//.append('<option value="">-- Select Session --</option>');
+
+    //     if (hallId) {
+    //         $.ajax({
+    //             url: '/ConferenceHallBookings/GetHallSessions',
+    //             type: 'GET',
+    //             data: { hallId: hallId },
+    //             success: function (data) {
+    //                 $.each(data, function (i, session) {
+    //                     $('#SessionDropdown').append('<option value="' + session.sessionId + '">' + session.sessionEn + '</option>');
+    //                 });
+    //             },
+    //             error: function () {
+    //                 console.log(data);
+    //                 alert('Error loading states.');
+    //             }
+    //         });
+    //     }
+    // });
+    //$('#SessionDropdown').select2();
+    });
+
+
+</script>
+
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

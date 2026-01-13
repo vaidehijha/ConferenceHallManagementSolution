@@ -1,0 +1,320 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@implements IDisposable
+
+@using ConferenceHallManagement.Web.Services
+@inject AuthState Auth
+@inject NavigationManager Nav
+
+<PageTitle>Home - Conference Hall Management</PageTitle>
+
+<div class="container-fluid py-5">
+    @if (!Auth.IsLoggedIn)
+    {
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Welcome to Conference Hall Management</h1>
+                <p class="lead text-muted mb-4">
+                    A modern solution for managing conference halls, bookings, and reservations efficiently.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="/login" class="btn btn-primary btn-lg">Login</a>
+                    <a href="#features" class="btn btn-outline-primary btn-lg">Learn More</a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="bg-light p-5 rounded-lg">
+                    <h2 class="mb-4">🏢 Conference Hall System</h2>
+                    <p class="text-muted">Manage bookings, view schedules, and organize meetings seamlessly.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="features" class="row mt-5 pt-5">
+            <h2 class="text-center mb-5">Key Features</h2>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">📅 Easy Booking</h5>
+                        <p class="card-text">Quick and intuitive booking system for conference halls.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">👥 Multi-User Support</h5>
+                        <p class="card-text">Support for users and administrators with role-based access.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">📊 Real-time Status</h5>
+                        <p class="card-text">View availability and booking status in real-time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Auth.Role == "User")
+    {
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-0">Welcome, @Auth.UserId! 👋</h1>
+                    <p class="text-muted">Your Conference Hall Dashboard</p>
+                    <div class="mt-2">
+                        <span class="badge bg-info">User Role</span>
+                    </div>
+                </div>
+                <button class="btn btn-danger" @onclick="Logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title">📅 Book a Hall</h5>
+                        <p class="card-text">Reserve a conference hall for your meetings.</p>
+                        <button class="btn btn-primary">Browse Halls</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title">📋 My Bookings</h5>
+                        <p class="card-text">View and manage your current and past bookings.</p>
+                        <button class="btn btn-primary">View Bookings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Total Bookings</h6>
+                        <h3 class="text-primary">5</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Upcoming Meetings</h6>
+                        <h3 class="text-success">2</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Halls Available</h6>
+                        <h3 class="text-info">8</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Hours This Month</h6>
+                        <h3 class="text-warning">24</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">📦 Repository Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p class="text-muted"><small>Database Connection</small></p>
+                        <span class="badge bg-success">Connected</span>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="text-muted"><small>API Service</small></p>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="text-muted"><small>Cache Status</small></p>
+                        <span class="badge bg-success">Enabled</span>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="text-muted"><small>Last Sync</small></p>
+                        <span class="badge bg-info">2 mins ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Auth.Role == "Admin")
+    {
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-0">Admin Dashboard</h1>
+                    <p class="text-muted">Welcome back, @Auth.UserId</p>
+                    <div class="mt-2">
+                        <span class="badge bg-danger">Admin Role</span>
+                        <span class="badge bg-secondary">Super User</span>
+                    </div>
+                </div>
+                <button class="btn btn-danger" @onclick="Logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 border-top border-5 border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Manage Halls</h5>
+                        <p class="card-text">Add, edit, or delete conference halls.</p>
+                        <button class="btn btn-primary">Go to Halls</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 border-top border-5 border-success">
+                    <div class="card-body">
+                        <h5 class="card-title">All Bookings</h5>
+                        <p class="card-text">View and manage all user bookings.</p>
+                        <button class="btn btn-success">View Bookings</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 border-top border-5 border-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Manage Users</h5>
+                        <p class="card-text">Add, edit, or remove users.</p>
+                        <button class="btn btn-warning">Manage Users</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Total Users</h6>
+                        <h3 class="text-primary">24</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Conference Halls</h6>
+                        <h3 class="text-info">8</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Total Bookings</h6>
+                        <h3 class="text-success">156</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="card-title text-muted">Occupancy Rate</h6>
+                        <h3 class="text-warning">78%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Repository Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p class="text-muted mb-2"><small>Database Connection</small></p>
+                                <span class="badge bg-success">Connected</span>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted mb-2"><small>API Service</small></p>
+                                <span class="badge bg-success">Active</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="text-muted mb-2"><small>Cache Status</small></p>
+                                <span class="badge bg-success">Enabled</span>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted mb-2"><small>Last Sync</small></p>
+                                <span class="badge bg-info">2 mins ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">System Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            <span class="badge bg-success">Online</span>
+                        </p>
+                        <div class="mb-2">
+                            <small class="text-muted d-block">All systems operational</small>
+                            <small class="text-muted d-block">Uptime: 99.8%</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Recent Bookings</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">No recent bookings to display.</p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.InitializeAsync();
+        Auth.OnAuthStateChanged += HandleAuthStateChanged;
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Logout()
+    {
+        await Auth.Logout();
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        Auth.OnAuthStateChanged -= HandleAuthStateChanged;
+    }
+}

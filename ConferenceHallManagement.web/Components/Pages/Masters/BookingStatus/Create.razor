@@ -1,0 +1,131 @@
+﻿@page "/masters/booking-status/create"
+@page "/booking-status/create"
+@rendermode InteractiveServer
+@inject IMasterBookingStatusBlazorService Service
+@inject NavigationManager Nav
+@inject ILogger<Create> Logger
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Create New Booking Status</h4>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@model" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label for="statusName" class="form-label">
+                                Status Name (English) <span class="text-danger">*</span>
+                            </label>
+                            <InputText id="statusName" 
+                                       class="form-control" 
+                                       @bind-Value="model.StatusName" 
+                                       placeholder="e.g., Pending, Approved, Confirmed"
+                                       disabled="@isSaving" />
+                            <ValidationMessage For="@(() => model.StatusName)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="statusNameHindi" class="form-label">
+                                Status Name (Hindi)
+                            </label>
+                            <InputText id="statusNameHindi" 
+                                       class="form-control" 
+                                       @bind-Value="model.StatusNameHindi" 
+                                       placeholder="e.g., लंबित, अनुमोदित, पुष्टि"
+                                       disabled="@isSaving" />
+                            <ValidationMessage For="@(() => model.StatusNameHindi)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="model.IsActive" disabled="@isSaving" />
+                            <label for="isActive" class="form-check-label">
+                                Is Active
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@isSaving">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                                @if (isSaving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <span><i class="bi bi-save"></i> Save</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private MasterBookingStatusVM model = new() { IsActive = true };
+    private bool isSaving = false;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSaving = true;
+            StateHasChanged();
+
+            Logger.LogInformation($"Creating new booking status: {model.StatusName}");
+
+            var result = await Service.CreateAsync(model);
+            
+            if (result > 0)
+            {
+                await JS.InvokeVoidAsync("toastrSuccess", $"Status '{model.StatusName}' created successfully!", "Success");
+                Logger.LogInformation($"Successfully created booking status: {model.StatusName}");
+                
+                // Small delay to show success message
+                await Task.Delay(800);
+                
+                // Force navigation
+                Nav.NavigateTo("/booking-status", forceLoad: true);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("toastrWarning", "Failed to create status. Please try again.", "Warning");
+                Logger.LogWarning("Create operation returned 0");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating booking status");
+            await JS.InvokeVoidAsync("toastrError", $"Error: {ex.Message}", "Error");
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleCancel()
+    {
+        try
+        {
+            Logger.LogInformation("User cancelled creation, navigating back");
+            Nav.NavigateTo("/booking-status", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during cancel navigation");
+        }
+    }
+}
